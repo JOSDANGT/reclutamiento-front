@@ -1,25 +1,21 @@
+
 <script setup lang="ts">
 definePageMeta({
   layout: 'auth',
 })
 
-useHead({
-  title: 'Iniciar sesión | TalentHub',
-})
-
-const { post } = useApi()
+const { post, guardarToken, eliminarToken } = useClienteRequest()
+const auth = useAuthStore()
 
 const formulario = ref()
 const usuario = ref('')
 const password = ref('')
-
 const mostrarPassword = ref(false)
 const cargando = ref(false)
 const error = ref('')
 
 const reglas = {
-  requerido: (valor: string) =>
-      !!valor?.trim() || 'Este campo es obligatorio.',
+  requerido: (valor: string) => !!valor?.trim() || 'Este campo es obligatorio.',
 }
 
 async function iniciarSesion() {
@@ -31,26 +27,25 @@ async function iniciarSesion() {
   error.value = ''
 
   try {
-    await post('/api/auth/login', {
+    const respuesta = await post('/api/auth/login', {
       usuario_dominio: usuario.value.trim(),
       password: password.value,
     })
 
-    await navigateTo('/')
-  }
-  catch (exception: unknown) {
-    const respuesta = exception as {
-      data?: {
-        message?: string
-        data?: {
-          message?: string
-        }
-      }
+    guardarToken(respuesta.data.access_token)
+
+    const autenticado = await auth.cargarUsuario()
+
+    if (!autenticado) {
+      eliminarToken()
+      throw new Error('No fue posible obtener la información del usuario.')
     }
 
-    error.value =
-        respuesta.data?.data?.message
-        || respuesta.data?.message
+    await navigateTo('/')
+  }
+  catch (exception: any) {
+    error.value = exception.response?.data?.message
+        || exception.message
         || 'No fue posible iniciar sesión.'
   }
   finally {
@@ -61,91 +56,85 @@ async function iniciarSesion() {
 
 <template>
   <VCard
-      rounded="xl"
       elevation="3"
-      class="pa-6 pa-sm-8"
+      rounded="lg"
+      width="100%"
+      max-width="450"
+      class="mx-auto"
   >
-    <div class="mb-7">
-      <h2 class="text-h5 font-weight-bold mb-2">
-        Bienvenido
-      </h2>
+    <VCardTitle class="text-h5 text-center pt-6">
+      Iniciar sesión
+    </VCardTitle>
 
-      <p class="text-body-2 text-medium-emphasis">
-        Ingresa tus credenciales para continuar.
-      </p>
-    </div>
+    <VCardSubtitle class="text-center">
+      Ingresa tus credenciales para continuar
+    </VCardSubtitle>
 
-    <VAlert
-        v-if="error"
-        type="error"
-        variant="tonal"
-        closable
-        class="mb-5"
-        @click:close="error = ''"
-    >
-      {{ error }}
-    </VAlert>
-
-    <VForm
-        ref="formulario"
-        @submit.prevent="iniciarSesion"
-    >
-      <VTextField
-          v-model="usuario"
-          label="Correo electrónico o usuario"
-          placeholder="Ingresa tu correo o usuario"
-          prepend-inner-icon="mdi-account-outline"
-          variant="outlined"
-          density="comfortable"
-          autocomplete="username"
-          :rules="[reglas.requerido]"
-          class="mb-3"
-      />
-
-      <VTextField
-          v-model="password"
-          label="Contraseña"
-          prepend-inner-icon="mdi-lock-outline"
-          :append-inner-icon="
-          mostrarPassword ? 'mdi-eye-off' : 'mdi-eye'
-        "
-          :type="mostrarPassword ? 'text' : 'password'"
-          variant="outlined"
-          density="comfortable"
-          autocomplete="current-password"
-          :rules="[reglas.requerido]"
-          class="mb-3"
-          @click:append-inner="mostrarPassword = !mostrarPassword"
-      />
-
-      <VBtn
-          type="submit"
-          color="primary"
-          size="large"
-          rounded="lg"
-          block
-          :loading="cargando"
-          :disabled="cargando"
+    <VCardText class="pa-6">
+      <VAlert
+          v-if="error"
+          type="error"
+          variant="tonal"
+          closable
+          class="mb-4"
+          @click:close="error = ''"
       >
-        Iniciar sesión
-      </VBtn>
-    </VForm>
+        {{ error }}
+      </VAlert>
 
-    <VDivider class="my-7" />
-
-    <div class="text-center">
-      <p class="text-body-2 text-medium-emphasis mb-3">
-        ¿Todavía no tienes una cuenta?
-      </p>
-
-      <VBtn
-          to="/registro"
-          color="primary"
-          variant="text"
-          prepend-icon="mdi-account-plus-outline"
+      <VForm
+          ref="formulario"
+          @submit.prevent="iniciarSesion"
       >
-        Registrarme como candidato
-      </VBtn>
-    </div>
+        <VTextField
+            v-model="usuario"
+            label="Usuario o correo electrónico"
+            prepend-inner-icon="mdi-account-outline"
+            variant="outlined"
+            density="comfortable"
+            autocomplete="username"
+            :rules="[reglas.requerido]"
+            class="mb-3"
+        />
+
+        <VTextField
+            v-model="password"
+            label="Contraseña"
+            prepend-inner-icon="mdi-lock-outline"
+            :append-inner-icon="mostrarPassword ? 'mdi-eye-off' : 'mdi-eye'"
+            :type="mostrarPassword ? 'text' : 'password'"
+            variant="outlined"
+            density="comfortable"
+            autocomplete="current-password"
+            :rules="[reglas.requerido]"
+            class="mb-3"
+            @click:append-inner="mostrarPassword = !mostrarPassword"
+        />
+
+        <VBtn
+            type="submit"
+            color="primary"
+            size="large"
+            block
+            :loading="cargando"
+            :disabled="cargando"
+        >
+          Iniciar sesión
+        </VBtn>
+      </VForm>
+
+      <div class="text-center mt-5">
+        <span class="text-body-2 text-medium-emphasis">
+          ¿No tienes una cuenta?
+        </span>
+
+        <NuxtLink
+            to="/registro"
+            class="text-primary text-decoration-none font-weight-medium ml-1"
+        >
+          Regístrate
+        </NuxtLink>
+      </div>
+    </VCardText>
   </VCard>
 </template>

@@ -1,12 +1,14 @@
+
 <script setup lang="ts">
 definePageMeta({
   middleware: 'auth',
 })
 
 const auth = useAuthStore()
-const { post } = useApi()
+const { post, eliminarToken } = useClienteRequest()
 
 const cerrandoSesion = ref(false)
+const error = ref('')
 
 async function cerrarSesion() {
   cerrandoSesion.value = true
@@ -14,6 +16,7 @@ async function cerrarSesion() {
   try {
     await post('/api/auth/logout')
 
+    eliminarToken()
     auth.limpiarSesion()
 
     await navigateTo('/login')
@@ -33,6 +36,15 @@ async function cerrarSesion() {
         </VCardTitle>
 
         <VCardText>
+          <VAlert
+              v-if="error"
+              type="error"
+              variant="tonal"
+              class="mb-4"
+          >
+            {{ error }}
+          </VAlert>
+
           <p class="mb-3">
             Usuario:
             {{ auth.usuario?.primer_nombre }}
@@ -50,6 +62,7 @@ async function cerrarSesion() {
           <VBtn
               color="primary"
               :loading="cerrandoSesion"
+              :disabled="cerrandoSesion"
               @click="cerrarSesion"
           >
             Cerrar sesión

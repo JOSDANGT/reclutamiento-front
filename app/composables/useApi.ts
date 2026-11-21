@@ -1,68 +1,63 @@
-type Parametro = string | number | boolean | null | undefined
-
-interface OpcionesGet {
-    params?: Record<string, Parametro>
-}
+import type { FetchOptions } from 'ofetch'
 
 export function useApi() {
-    const get = <T = unknown>(
+    const config = useRuntimeConfig()
+
+    function request<T>(
         url: string,
-        options?: OpcionesGet,
-    ): Promise<T> => {
+        options: FetchOptions = {},
+    ): Promise<T> {
+        const token = import.meta.client
+            ? sessionStorage.getItem('talenthub_token')
+            : null
+
         return $fetch<T>(url, {
+            baseURL: config.public.apiBase,
+            ...options,
+            headers: {
+                Accept: 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                ...options.headers,
+            },
+        })
+    }
+
+    function get<T = unknown>(
+        url: string,
+        options?: { params?: Record<string, string | number | boolean> },
+    ) {
+        return request<T>(url, {
             method: 'GET',
             query: options?.params,
-            credentials: 'same-origin',
         })
     }
 
-    const post = <T = unknown>(
-        url: string,
-        data?: Record<string, unknown>,
-    ): Promise<T> => {
-        return $fetch<T>(url, {
+    function post<T = unknown>(url: string, datos?: unknown) {
+        return request<T>(url, {
             method: 'POST',
-            body: data,
-            credentials: 'same-origin',
+            body: datos,
         })
     }
 
-    const put = <T = unknown>(
-        url: string,
-        data?: Record<string, unknown>,
-    ): Promise<T> => {
-        return $fetch<T>(url, {
+    function put<T = unknown>(url: string, datos?: unknown) {
+        return request<T>(url, {
             method: 'PUT',
-            body: data,
-            credentials: 'same-origin',
+            body: datos,
         })
     }
 
-    const patch = <T = unknown>(
-        url: string,
-        data?: Record<string, unknown>,
-    ): Promise<T> => {
-        return $fetch<T>(url, {
+    function patch<T = unknown>(url: string, datos?: unknown) {
+        return request<T>(url, {
             method: 'PATCH',
-            body: data,
-            credentials: 'same-origin',
+            body: datos,
         })
     }
 
-    const del = <T = unknown>(
-        url: string,
-    ): Promise<T> => {
-        return $fetch<T>(url, {
+    function del<T = unknown>(url: string) {
+        return request<T>(url, {
             method: 'DELETE',
-            credentials: 'same-origin',
         })
     }
 
-    return {
-        get,
-        post,
-        put,
-        patch,
-        del,
-    }
+    return { get, post, put, patch, del }
 }

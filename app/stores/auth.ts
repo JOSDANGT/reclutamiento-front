@@ -1,9 +1,6 @@
+
 import { defineStore } from 'pinia'
-import type {
-    Usuario,
-    RespuestaApi,
-    DatosAutenticacion,
-} from '../types/auth'
+import type { Usuario } from '../types/auth'
 
 export const useAuthStore = defineStore('auth', () => {
     const usuario = ref<Usuario | null>(null)
@@ -27,18 +24,16 @@ export const useAuthStore = defineStore('auth', () => {
         usuario.value = null
         roles.value = []
         permisos.value = []
+        inicializado.value = false
     }
 
     async function cargarUsuario() {
         cargando.value = true
 
         try {
-            // Durante SSR reenvía las cookies de la petición actual.
-            const api = import.meta.server ? useRequestFetch() : $fetch
+            const { get } = useClienteRequest()
 
-            const respuesta = await api<RespuestaApi<DatosAutenticacion>>(
-                '/api/auth/me',
-            )
+            const respuesta = await get('/api/auth/me')
 
             usuario.value = respuesta.data.user
             roles.value = respuesta.data.roles
