@@ -1,4 +1,3 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2026-11-21',
 
@@ -20,8 +19,6 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE
-    },
+    apiBase: '',
   },
 })
