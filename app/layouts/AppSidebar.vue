@@ -146,6 +146,13 @@ const rolesUsuario = computed(() =>
             color="primary"
         />
 
+        <VListItem
+            v-if="auth.tienePermiso('Ver postulaciones')"
+            title="Ejercicios de programación"
+            prepend-icon="mdi-code-braces"
+            to="/ejercicios"
+        />
+
 
       </template>
 
