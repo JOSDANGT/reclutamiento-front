@@ -173,13 +173,12 @@ const rolesUsuario = computed(() =>
         />
 
         <VListItem
-            v-if="puedeVerMisPostulaciones"
+            v-if="esCandidato && auth.tienePermiso('Ver mis postulaciones')"
             to="/mis-postulaciones"
             title="Mis postulaciones"
-            prepend-icon="mdi-file-document-check-outline"
+            prepend-icon="mdi-clipboard-list-outline"
             rounded="lg"
             color="primary"
-            disabled
         />
 
         <VDivider
