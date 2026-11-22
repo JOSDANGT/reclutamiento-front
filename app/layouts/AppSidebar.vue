@@ -56,10 +56,11 @@ const nombreUsuario = computed(() => [
 
       <VListItem
           v-if="puedeVerVacantes"
+          to="/vacantes"
           title="Vacantes"
           prepend-icon="mdi-briefcase-outline"
           rounded="lg"
-          disabled
+          color="primary"
       />
 
       <VListItem
@@ -75,6 +76,7 @@ const nombreUsuario = computed(() => [
       <VListSubheader>
         GESTIÓN DE RECLUTAMIENTO
       </VListSubheader>
+
 
       <VListItem
           v-if="puedeCrearVacantes"
