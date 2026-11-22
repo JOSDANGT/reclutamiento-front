@@ -1,4 +1,3 @@
-
 <script setup lang="ts">
 const auth = useAuthStore()
 
@@ -6,15 +5,67 @@ const abierto = defineModel<boolean>('abierto', {
   default: true,
 })
 
-const esCandidato = computed(() => auth.tieneRol('CANDIDATO'))
-const puedeVerVacantes = computed(() => auth.tienePermiso('Ver vacantes'))
-const puedeCrearVacantes = computed(() => auth.tienePermiso('Crear vacantes'))
-const puedeVerUnidades = computed(() => auth.tienePermiso('Ver unidades'))
+// Permisos de reclutamiento
+const puedeVerVacantes = computed(() =>
+    auth.tienePermiso('Ver vacantes'),
+)
 
-const nombreUsuario = computed(() => [
-  auth.usuario?.primer_nombre,
-  auth.usuario?.primer_apellido,
-].filter(Boolean).join(' '))
+const puedeVerPostulaciones = computed(() =>
+    auth.tienePermiso('Ver postulaciones'),
+)
+
+const puedeVerCandidatos = computed(() =>
+    auth.tienePermiso('Ver candidatos'),
+)
+
+// Permisos del portal del candidato
+const puedeVerOportunidades = computed(() =>
+    auth.tienePermiso('Ver oportunidades laborales'),
+)
+
+const puedeVerMisPostulaciones = computed(() =>
+    auth.tienePermiso('Ver mis postulaciones'),
+)
+
+const puedeVerPerfilCandidato = computed(() =>
+    auth.tienePermiso('Ver perfil candidato'),
+)
+
+// Administración
+const puedeVerUnidades = computed(() =>
+    auth.tienePermiso('Ver unidades'),
+)
+
+// El portal del candidato se muestra solo al rol CANDIDATO.
+const esCandidato = computed(() =>
+    auth.tieneRol('CANDIDATO'),
+)
+
+const mostrarReclutamiento = computed(() =>
+    puedeVerVacantes.value
+    || puedeVerPostulaciones.value
+    || puedeVerCandidatos.value,
+)
+
+const mostrarPortalCandidato = computed(() =>
+        esCandidato.value
+        && (
+            puedeVerOportunidades.value
+            || puedeVerMisPostulaciones.value
+            || puedeVerPerfilCandidato.value
+        ),
+)
+
+const nombreUsuario = computed(() =>
+    [
+      auth.usuario?.primer_nombre,
+      auth.usuario?.primer_apellido,
+    ].filter(Boolean).join(' ') || 'Usuario',
+)
+
+const rolesUsuario = computed(() =>
+    auth.roles?.join(', ') || 'Sin rol asignado',
+)
 </script>
 
 <template>
@@ -22,16 +73,26 @@ const nombreUsuario = computed(() => [
       v-model="abierto"
       width="265"
   >
+    <!-- Identidad de la aplicación -->
     <div class="pa-5">
       <div class="d-flex align-center ga-3">
-        <VAvatar color="primary" variant="tonal" rounded="lg">
-          <VIcon icon="mdi-account-group-outline" />
+        <VAvatar
+            color="primary"
+            variant="tonal"
+            rounded="lg"
+            size="48"
+        >
+          <VIcon
+              icon="mdi-account-group-outline"
+              size="26"
+          />
         </VAvatar>
 
         <div>
           <div class="text-h6 font-weight-bold">
             TalentHub
           </div>
+
           <div class="text-caption text-medium-emphasis">
             Cooperativa Guayacán
           </div>
@@ -41,7 +102,12 @@ const nombreUsuario = computed(() => [
 
     <VDivider />
 
-    <VList nav density="comfortable" class="pa-3">
+    <VList
+        nav
+        density="comfortable"
+        class="pa-3"
+    >
+      <!-- Principal -->
       <VListSubheader>
         PRINCIPAL
       </VListSubheader>
@@ -54,78 +120,111 @@ const nombreUsuario = computed(() => [
           color="primary"
       />
 
-      <VListItem
-          v-if="puedeVerVacantes"
-          to="/vacantes"
-          title="Vacantes"
-          prepend-icon="mdi-briefcase-outline"
-          rounded="lg"
-          color="primary"
-      />
+      <!-- Gestión de reclutamiento -->
+      <template v-if="mostrarReclutamiento">
+        <VDivider class="my-3" />
 
-      <VListItem
-          v-if="esCandidato"
-          title="Mi perfil"
-          prepend-icon="mdi-account-outline"
-          rounded="lg"
-          disabled
-      />
+        <VListSubheader>
+          GESTIÓN DE RECLUTAMIENTO
+        </VListSubheader>
 
-      <VDivider class="my-3" />
+        <VListItem
+            v-if="puedeVerVacantes"
+            to="/vacantes"
+            title="Gestión de vacantes"
+            prepend-icon="mdi-briefcase-outline"
+            rounded="lg"
+            color="primary"
+        />
 
-      <VListSubheader>
-        GESTIÓN DE RECLUTAMIENTO
-      </VListSubheader>
+        <VListItem
+            v-if="puedeVerPostulaciones"
+            to="/postulaciones"
+            title="Postulaciones"
+            prepend-icon="mdi-clipboard-text-outline"
+            rounded="lg"
+            color="primary"
+        />
 
+        <VListItem
+            v-if="puedeVerCandidatos"
+            title="Candidatos"
+            prepend-icon="mdi-account-multiple-outline"
+            rounded="lg"
+            disabled
+        />
+      </template>
 
-      <VListItem
-          v-if="puedeCrearVacantes"
-          title="Administrar vacantes"
-          prepend-icon="mdi-file-document-edit-outline"
-          rounded="lg"
-          disabled
-      />
+      <!-- Portal del candidato -->
+      <template v-if="mostrarPortalCandidato">
+        <VDivider class="my-3" />
 
-      <VListItem
-          v-if="!esCandidato"
-          title="Candidatos"
-          prepend-icon="mdi-account-multiple-outline"
-          rounded="lg"
-          disabled
-      />
+        <VListSubheader>
+          MI BÚSQUEDA DE EMPLEO
+        </VListSubheader>
 
-      <VListItem
-          v-if="!esCandidato"
-          title="Postulaciones"
-          prepend-icon="mdi-clipboard-text-outline"
-          rounded="lg"
-          disabled
-      />
+        <VListItem
+            v-if="puedeVerOportunidades"
+            to="/oportunidades"
+            title="Oportunidades laborales"
+            prepend-icon="mdi-briefcase-search-outline"
+            rounded="lg"
+            color="primary"
+        />
 
-      <VListItem
-          v-if="!esCandidato"
-          title="Entrevistas"
-          prepend-icon="mdi-calendar-account-outline"
-          rounded="lg"
-          disabled
-      />
+        <VListItem
+            v-if="puedeVerMisPostulaciones"
+            to="/mis-postulaciones"
+            title="Mis postulaciones"
+            prepend-icon="mdi-file-document-check-outline"
+            rounded="lg"
+            color="primary"
+            disabled
+        />
 
-      <VListItem
-          v-if="puedeVerUnidades"
-          to="/unidades"
-          title="Unidades"
-          prepend-icon="mdi-domain"
-          rounded="lg"
-          color="primary"
-      />
+        <VDivider
+            v-if="puedeVerPerfilCandidato"
+            class="my-3"
+        />
+
+        <VListSubheader v-if="puedeVerPerfilCandidato">
+          MI CUENTA
+        </VListSubheader>
+
+        <VListItem
+            v-if="puedeVerPerfilCandidato"
+            title="Mi perfil"
+            prepend-icon="mdi-account-outline"
+            rounded="lg"
+            disabled
+        />
+      </template>
+
+      <!-- Administración -->
+      <template v-if="puedeVerUnidades">
+        <VDivider class="my-3" />
+
+        <VListSubheader>
+          ADMINISTRACIÓN
+        </VListSubheader>
+
+        <VListItem
+            to="/unidades"
+            title="Unidades"
+            prepend-icon="mdi-domain"
+            rounded="lg"
+            color="primary"
+        />
+      </template>
     </VList>
 
+    <!-- Usuario autenticado -->
     <template #append>
       <VDivider />
 
       <VListItem
           :title="nombreUsuario"
-          :subtitle="auth.roles.join(', ')"
+          :subtitle="rolesUsuario"
           prepend-icon="mdi-account-circle-outline"
           class="ma-3"
       />
