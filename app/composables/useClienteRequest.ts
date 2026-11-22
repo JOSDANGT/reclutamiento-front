@@ -20,7 +20,7 @@ export const useClienteRequest = () => {
 
     // Crear instancia de Axios
     const axiosInstance: AxiosInstance = axios.create({
-        baseURL: config.public.apiBase,
+        baseURL: '/services',
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',

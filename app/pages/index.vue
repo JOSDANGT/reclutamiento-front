@@ -1,74 +1,89 @@
 
 <script setup lang="ts">
 definePageMeta({
+  layout: 'default',
   middleware: 'auth',
 })
 
 const auth = useAuthStore()
-const { post, eliminarToken } = useClienteRequest()
 
-const cerrandoSesion = ref(false)
-const error = ref('')
-
-async function cerrarSesion() {
-  cerrandoSesion.value = true
-
-  try {
-    await post('/api/auth/logout')
-
-    eliminarToken()
-    auth.limpiarSesion()
-
-    await navigateTo('/login')
-  }
-  finally {
-    cerrandoSesion.value = false
-  }
-}
+const nombreUsuario = computed(() => {
+  return auth.usuario?.primer_nombre || 'Usuario'
+})
 </script>
 
 <template>
-  <VMain>
-    <VContainer class="py-10">
-      <VCard rounded="xl" class="pa-6">
-        <VCardTitle>
-          Bienvenido a TalentHub
-        </VCardTitle>
+  <VContainer fluid class="pa-6">
+    <div class="mb-6">
+      <h1 class="text-h5 font-weight-bold mb-2">
+        Bienvenido, {{ nombreUsuario }}
+      </h1>
 
-        <VCardText>
-          <VAlert
-              v-if="error"
-              type="error"
-              variant="tonal"
-              class="mb-4"
-          >
-            {{ error }}
-          </VAlert>
+      <p class="text-body-2 text-medium-emphasis">
+        Panel principal del Sistema de Reclutamiento y Selección.
+      </p>
+    </div>
 
-          <p class="mb-3">
-            Usuario:
-            {{ auth.usuario?.primer_nombre }}
-            {{ auth.usuario?.primer_apellido }}
-          </p>
+    <VRow>
+      <VCol cols="12" md="6">
+        <VCard rounded="lg" elevation="1">
+          <VCardTitle class="d-flex align-center ga-2">
+            <VIcon icon="mdi-account-circle-outline" color="primary" />
+            Mi información
+          </VCardTitle>
 
-          <p class="mb-3">
-            Roles: {{ auth.roles.join(', ') }}
-          </p>
+          <VCardText>
+            <div class="mb-3">
+              <strong>Nombre:</strong>
+              {{ auth.usuario?.primer_nombre }}
+              {{ auth.usuario?.primer_apellido }}
+            </div>
 
-          <p class="mb-5">
-            Permisos: {{ auth.permisos.join(', ') }}
-          </p>
+            <div class="mb-3">
+              <strong>Correo:</strong>
+              {{ auth.usuario?.email }}
+            </div>
 
-          <VBtn
-              color="primary"
-              :loading="cerrandoSesion"
-              :disabled="cerrandoSesion"
-              @click="cerrarSesion"
-          >
-            Cerrar sesión
-          </VBtn>
-        </VCardText>
-      </VCard>
-    </VContainer>
-  </VMain>
+            <div>
+              <strong>Roles:</strong>
+              {{ auth.roles.join(', ') }}
+            </div>
+          </VCardText>
+        </VCard>
+      </VCol>
+
+      <VCol cols="12" md="6">
+        <VCard rounded="lg" elevation="1">
+          <VCardTitle class="d-flex align-center ga-2">
+            <VIcon icon="mdi-shield-check-outline" color="primary" />
+            Permisos asignados
+          </VCardTitle>
+
+          <VCardText>
+            <div v-if="auth.permisos.length">
+              <VChip
+                  v-for="permiso in auth.permisos"
+                  :key="permiso"
+                  color="primary"
+                  variant="tonal"
+                  size="small"
+                  class="ma-1"
+              >
+                {{ permiso }}
+              </VChip>
+            </div>
+
+            <VAlert
+                v-else
+                type="info"
+                variant="tonal"
+                density="compact"
+            >
+              No tienes permisos asignados.
+            </VAlert>
+          </VCardText>
+        </VCard>
+      </VCol>
+    </VRow>
+  </VContainer>
 </template>
