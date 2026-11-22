@@ -49,23 +49,24 @@ async function guardarEvaluacion() {
   mensaje.value = ''
 
   try {
-    await post(
-        `/api/postulaciones/requisitos/${props.postulacionId}`,
-        {
-          requisitos: requisitos.value.map(requisito => ({
-            id: requisito.id,
-            cumple: requisito.cumple,
-            observacion: requisito.observacion || null,
-          })),
-        },
-    )
-
-    mensaje.value = 'Evaluación guardada correctamente.'
+    await post(`/api/postulaciones/requisitos/${props.postulacionId}`, {
+      requisitos: requisitos.value.map(item => ({
+        id: item.id,
+        cumple: item.cumple,
+        observacion: item.observacion?.trim() || null,
+      })),
+    })
 
     await cargarRequisitos()
+
+    mensaje.value = 'Evaluación guardada correctamente.'
   }
   catch (exception: any) {
-    error.value = exception.response?.data?.message
+    const errores = exception.response?.data?.errors
+
+    error.value = errores
+        ? Object.values(errores).flat().join(' ')
+        : exception.response?.data?.message
         || 'No fue posible guardar la evaluación.'
   }
   finally {

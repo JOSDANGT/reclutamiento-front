@@ -138,10 +138,10 @@ const rolesUsuario = computed(() =>
         />
 
         <VListItem
-            v-if="puedeVerPostulaciones"
+            v-if="auth.tienePermiso('Ver postulaciones')"
             to="/postulaciones"
             title="Postulaciones"
-            prepend-icon="mdi-clipboard-text-outline"
+            prepend-icon="mdi-clipboard-list-outline"
             rounded="lg"
             color="primary"
         />
