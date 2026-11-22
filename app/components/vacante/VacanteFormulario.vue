@@ -1,3 +1,4 @@
+
 <script setup lang="ts">
 const props = defineProps<{
   vacante?: any
@@ -8,18 +9,21 @@ const emit = defineEmits<{
   guardar: [datos: any]
 }>()
 
-const {get} = useClienteRequest()
+const { get } = useClienteRequest()
 
 const formulario = ref()
-const unidades = ref<any[]>([])
-const cargandoUnidades = ref(false)
-const errorUnidades = ref('')
+
+const puestos = ref<any[]>([])
+const cargandoPuestos = ref(false)
+const errorPuestos = ref('')
+
+const requisitosSeleccionados = ref<any[]>([])
 
 const editando = computed(() => !!props.vacante?.id)
 
 const datos = reactive({
   titulo: '',
-  unidad_id: null as number | null,
+  puesto_id: null as number | null,
   descripcion: '',
   cantidad_plazas: 1,
   salario_minimo: null as number | null,
@@ -32,31 +36,32 @@ const datos = reactive({
 })
 
 const modalidades = [
-  {title: 'Presencial', value: 'PRESENCIAL'},
-  {title: 'Híbrida', value: 'HIBRIDA'},
-  {title: 'Remota', value: 'REMOTA'},
+  { title: 'Presencial', value: 'PRESENCIAL' },
+  { title: 'Híbrida', value: 'HIBRIDA' },
+  { title: 'Remota', value: 'REMOTA' },
 ]
 
 const tiposContrato = [
-  {title: 'Tiempo completo', value: 'TIEMPO_COMPLETO'},
-  {title: 'Medio tiempo', value: 'MEDIO_TIEMPO'},
-  {title: 'Temporal', value: 'TEMPORAL'},
-  {title: 'Por contrato', value: 'POR_CONTRATO'},
+  { title: 'Tiempo completo', value: 'TIEMPO_COMPLETO' },
+  { title: 'Medio tiempo', value: 'MEDIO_TIEMPO' },
+  { title: 'Temporal', value: 'TEMPORAL' },
+  { title: 'Por contrato', value: 'POR_CONTRATO' },
 ]
 
 const nivelesExperiencia = [
-  {title: 'Sin experiencia', value: 'SIN_EXPERIENCIA'},
-  {title: 'Junior', value: 'JUNIOR'},
-  {title: 'Intermedio', value: 'INTERMEDIO'},
-  {title: 'Senior', value: 'SENIOR'},
+  { title: 'Sin experiencia', value: 'SIN_EXPERIENCIA' },
+  { title: 'Junior', value: 'JUNIOR' },
+  { title: 'Intermedio', value: 'INTERMEDIO' },
+  { title: 'Senior', value: 'SENIOR' },
 ]
-
 
 const reglas = {
   requerido: (valor: any) =>
-      (valor !== null
+      (
+          valor !== null
           && valor !== undefined
-          && String(valor).trim() !== '')
+          && String(valor).trim() !== ''
+      )
       || 'Este campo es obligatorio.',
 
   maximo: (valor: string, cantidad: number) =>
@@ -65,16 +70,21 @@ const reglas = {
       || `Máximo ${cantidad} caracteres.`,
 
   plazas: (valor: any) =>
-      (valor !== null
+      (
+          valor !== null
           && valor !== ''
           && Number.isInteger(Number(valor))
-          && Number(valor) >= 1)
+          && Number(valor) >= 1
+      )
       || 'Ingrese un número entero mayor a cero.',
 
   salario: (valor: any) =>
       valor === null
       || valor === ''
-      || (Number.isFinite(Number(valor)) && Number(valor) >= 0)
+      || (
+          Number.isFinite(Number(valor))
+          && Number(valor) >= 0
+      )
       || 'Ingrese un salario válido.',
 
   salarioMaximo: (valor: any) =>
@@ -104,66 +114,87 @@ function numeroOpcional(valor: any) {
 
 function cargarFormulario(vacante?: any) {
   datos.titulo = vacante?.titulo ?? ''
-  datos.unidad_id = vacante?.unidad_id == null
+
+  datos.puesto_id = vacante?.puesto_id == null
       ? null
-      : Number(vacante.unidad_id)
+      : Number(vacante.puesto_id)
+
   datos.descripcion = vacante?.descripcion ?? ''
   datos.cantidad_plazas = vacante?.cantidad_plazas ?? 1
+
   datos.salario_minimo = numeroOpcional(vacante?.salario_minimo)
   datos.salario_maximo = numeroOpcional(vacante?.salario_maximo)
+
   datos.modalidad = vacante?.modalidad ?? ''
   datos.tipo_contrato = vacante?.tipo_contrato ?? ''
   datos.nivel_experiencia = vacante?.nivel_experiencia ?? ''
+
   datos.fecha_inicio = fechaInput(vacante?.fecha_inicio)
   datos.fecha_limite = fechaInput(vacante?.fecha_limite)
+
+  requisitosSeleccionados.value = (vacante?.requisitos ?? []).map(
+      (requisito: any, index: number) => ({
+        id: requisito.id,
+        nombre: requisito.nombre,
+        descripcion: requisito.descripcion,
+        obligatorio: Boolean(requisito.pivot?.obligatorio),
+        orden: requisito.pivot?.orden ?? index + 1,
+      }),
+  )
 }
 
 watch(
     () => props.vacante,
     cargarFormulario,
-    {immediate: true},
+    { immediate: true },
 )
 
-async function obtenerUnidades() {
-  cargandoUnidades.value = true
-  errorUnidades.value = ''
+async function obtenerPuestos() {
+  cargandoPuestos.value = true
+  errorPuestos.value = ''
 
   try {
-    const respuesta = await get('/api/unidades')
+    const respuesta = await get('/api/puestos')
 
     const registros = Array.isArray(respuesta.data)
         ? respuesta.data
         : respuesta.data?.data ?? []
 
-    unidades.value = registros.filter(
-        (unidad: any) =>
-            unidad.estado === true
-            || unidad.estado === 1,
+    puestos.value = registros.filter(
+        (puesto: any) =>
+            puesto.estado === true
+            || puesto.estado === 1,
     )
 
-    // Permite visualizar la unidad actual aunque esté inactiva.
-    const unidadActual = props.vacante?.unidad
+    // Permitir ver el puesto actual aunque esté inactivo.
+    const puestoActual = props.vacante?.puesto
 
     if (
-        unidadActual
-        && !unidades.value.some(
-            unidad => Number(unidad.id) === Number(unidadActual.id),
+        puestoActual
+        && !puestos.value.some(
+            puesto => Number(puesto.id) === Number(puestoActual.id),
         )
     ) {
-      unidades.value.push(unidadActual)
+      puestos.value.push(puestoActual)
     }
-  } catch (exception: any) {
-    errorUnidades.value = exception.response?.data?.message
-        || 'No fue posible cargar las unidades.'
-  } finally {
-    cargandoUnidades.value = false
+  }
+  catch (exception: any) {
+    errorPuestos.value = exception.response?.data?.message
+        || 'No fue posible cargar los puestos.'
+  }
+  finally {
+    cargandoPuestos.value = false
   }
 }
 
 async function guardar() {
-  if (props.guardando || cargandoUnidades.value || errorUnidades.value) return
+  if (
+      props.guardando
+      || cargandoPuestos.value
+      || errorPuestos.value
+  ) return
 
-  const {valid} = await formulario.value.validate()
+  const { valid } = await formulario.value.validate()
 
   if (!valid) return
 
@@ -178,20 +209,32 @@ async function guardar() {
     nivel_experiencia: datos.nivel_experiencia,
     fecha_inicio: datos.fecha_inicio || null,
     fecha_limite: datos.fecha_limite || null,
+
+    requisitos: requisitosSeleccionados.value.map(
+        (requisito, index) => ({
+          id: requisito.id,
+          obligatorio: Boolean(requisito.obligatorio),
+          orden: index + 1,
+        }),
+    ),
   }
 
-  // En edición, no reenviar la misma unidad si está inactiva.
+  // Evitar reenviar un puesto inactivo que no fue modificado.
   if (
       !editando.value
-      || Number(datos.unidad_id) !== Number(props.vacante?.unidad_id)
+      || datos.puesto_id !== (
+          props.vacante?.puesto_id == null
+              ? null
+              : Number(props.vacante.puesto_id)
+      )
   ) {
-    payload.unidad_id = datos.unidad_id
+    payload.puesto_id = datos.puesto_id
   }
 
   emit('guardar', payload)
 }
 
-onMounted(obtenerUnidades)
+onMounted(obtenerPuestos)
 </script>
 
 <template>
@@ -200,21 +243,26 @@ onMounted(obtenerUnidades)
       @submit.prevent="guardar"
   >
     <VAlert
-        v-if="errorUnidades"
+        v-if="errorPuestos"
         type="error"
         variant="tonal"
         class="mb-4"
     >
-      {{ errorUnidades }}
+      {{ errorPuestos }}
     </VAlert>
 
+    <!-- Información general -->
     <VCard rounded="lg" elevation="1" class="mb-5">
       <VCardTitle class="pa-5">
-        <VIcon icon="mdi-briefcase-outline" color="primary" class="mr-2"/>
+        <VIcon
+            icon="mdi-briefcase-outline"
+            color="primary"
+            class="mr-2"
+        />
         Información general
       </VCardTitle>
 
-      <VDivider/>
+      <VDivider />
 
       <VCardText class="pa-5">
         <VRow>
@@ -233,18 +281,19 @@ onMounted(obtenerUnidades)
           </VCol>
 
           <VCol cols="12" md="6">
-            <VSelect
-                v-model="datos.unidad_id"
-                label="Unidad organizacional *"
-                :items="unidades"
+            <VAutocomplete
+                v-model="datos.puesto_id"
+                label="Puesto de trabajo *"
+                :items="puestos"
                 item-title="nombre"
                 item-value="id"
-                :loading="cargandoUnidades"
-                :disabled="cargandoUnidades || !!errorUnidades"
+                :loading="cargandoPuestos"
+                :disabled="cargandoPuestos || !!errorPuestos"
                 variant="outlined"
                 density="comfortable"
                 :rules="[reglas.requerido]"
-                no-data-text="No hay unidades activas disponibles"
+                no-data-text="No hay puestos disponibles"
+                clearable
             />
           </VCol>
 
@@ -270,20 +319,35 @@ onMounted(obtenerUnidades)
                 rows="5"
                 auto-grow
                 counter="4000"
-                :rules="[valor => reglas.maximo(valor, 4000)]"
+                :rules="[
+                valor => reglas.maximo(valor, 4000),
+              ]"
             />
           </VCol>
         </VRow>
       </VCardText>
     </VCard>
 
+    <!-- Requisitos -->
+    <VacanteRequisitos
+        v-model="requisitosSeleccionados"
+        :puesto-id="datos.puesto_id"
+        :disabled="guardando"
+        :editando="editando"
+    />
+
+    <!-- Condiciones laborales -->
     <VCard rounded="lg" elevation="1" class="mb-5">
       <VCardTitle class="pa-5">
-        <VIcon icon="mdi-account-tie-outline" color="primary" class="mr-2"/>
+        <VIcon
+            icon="mdi-account-tie-outline"
+            color="primary"
+            class="mr-2"
+        />
         Condiciones laborales
       </VCardTitle>
 
-      <VDivider/>
+      <VDivider />
 
       <VCardText class="pa-5">
         <VRow>
@@ -354,6 +418,7 @@ onMounted(obtenerUnidades)
       </VCardText>
     </VCard>
 
+    <!-- Fechas -->
     <VCard rounded="lg" elevation="1" class="mb-5">
       <VCardTitle class="pa-5">
         <VIcon
@@ -364,7 +429,7 @@ onMounted(obtenerUnidades)
         Fechas de la vacante
       </VCardTitle>
 
-      <VDivider/>
+      <VDivider />
 
       <VCardText class="pa-5">
         <VRow>
@@ -392,6 +457,7 @@ onMounted(obtenerUnidades)
       </VCardText>
     </VCard>
 
+    <!-- Acciones -->
     <div class="d-flex justify-end ga-3">
       <VBtn
           variant="outlined"
@@ -406,7 +472,11 @@ onMounted(obtenerUnidades)
           color="primary"
           prepend-icon="mdi-content-save-outline"
           :loading="guardando"
-          :disabled="guardando || cargandoUnidades || !!errorUnidades"
+          :disabled="
+          guardando
+          || cargandoPuestos
+          || !!errorPuestos
+        "
       >
         {{ editando ? 'Guardar cambios' : 'Guardar vacante' }}
       </VBtn>

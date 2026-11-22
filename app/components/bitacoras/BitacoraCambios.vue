@@ -1,4 +1,3 @@
-
 <script setup lang="ts">
 import {formatearValor, interpretarDatos, nombreCampo,} from '../../utils/bitacoras/configuracion.ts'
 
@@ -45,6 +44,31 @@ function mostrarValor(valor: any, campo: string) {
 
   return formatearValor(valor, campo, props.tipo)
 }
+
+
+function esCampoRequisitos(campo: string) {
+  return props.tipo === 'vacante' && campo === 'requisitos'
+}
+
+function obtenerRequisitos(valor: any) {
+  if (!Array.isArray(valor)) return []
+
+  return valor.map((requisito: any) => ({
+    id: requisito.id,
+    nombre: requisito.nombre || `Requisito #${requisito.id}`,
+    obligatorio: [true, 1, '1'].includes(
+        requisito.pivot?.obligatorio ?? requisito.obligatorio,
+    ),
+    orden: Number(
+        requisito.pivot?.orden ?? requisito.orden ?? 0,
+    ),
+  }))
+}
+
+function descripcionRequisito(requisito: any) {
+  return requisito.obligatorio ? 'Obligatorio' : 'Opcional'
+}
+
 
 function valoresIguales(anterior: any, nuevo: any) {
   if (anterior === nuevo) return true
@@ -115,6 +139,7 @@ function esEstado(campo: string) {
 </script>
 
 
+
 <template>
   <div v-if="cambios.length" class="bitacora-cambios">
     <div
@@ -126,13 +151,100 @@ function esEstado(campo: string) {
         {{ cambio.nombre }}
       </div>
 
-      <!-- Creación: mostrar únicamente el nuevo valor -->
-      <div v-if="soloCreacion" class="text-body-2 valor-nuevo">
+      <!-- Visualización específica de requisitos -->
+      <div v-if="esCampoRequisitos(cambio.campo)">
+        <!-- Requisitos anteriores -->
+        <div
+            v-if="!soloCreacion && cambio.tieneAnterior"
+            class="mb-3"
+        >
+          <div class="text-caption text-medium-emphasis mb-2">
+            Anteriores
+          </div>
+
+          <div
+              v-for="requisito in obtenerRequisitos(cambio.anterior)"
+              :key="`anterior-${requisito.id}`"
+              class="d-flex align-start ga-2 mb-2"
+          >
+            <VIcon
+                icon="mdi-circle-small"
+                color="medium-emphasis"
+                size="20"
+            />
+
+            <div>
+              <div class="text-body-2">
+                {{ requisito.nombre }}
+              </div>
+
+              <div class="text-caption text-medium-emphasis">
+                {{ descripcionRequisito(requisito) }}
+              </div>
+            </div>
+          </div>
+
+          <div
+              v-if="!obtenerRequisitos(cambio.anterior).length"
+              class="text-body-2 text-medium-emphasis"
+          >
+            Sin requisitos
+          </div>
+        </div>
+
+        <!-- Requisitos nuevos -->
+        <div v-if="cambio.tieneNuevo">
+          <div
+              v-if="!soloCreacion"
+              class="text-caption text-medium-emphasis mb-2"
+          >
+            Nuevos
+          </div>
+
+          <div
+              v-for="requisito in obtenerRequisitos(cambio.nuevo)"
+              :key="`nuevo-${requisito.id}`"
+              class="d-flex align-start ga-2 mb-2"
+          >
+            <VIcon
+                icon="mdi-check-circle-outline"
+                color="success"
+                size="18"
+            />
+
+            <div>
+              <div class="text-body-2 font-weight-medium">
+                {{ requisito.nombre }}
+              </div>
+
+              <div class="text-caption text-medium-emphasis">
+                {{ descripcionRequisito(requisito) }}
+              </div>
+            </div>
+          </div>
+
+          <div
+              v-if="!obtenerRequisitos(cambio.nuevo).length"
+              class="text-body-2 text-medium-emphasis"
+          >
+            Sin requisitos
+          </div>
+        </div>
+      </div>
+
+      <!-- Creación: mostrar únicamente el valor nuevo -->
+      <div
+          v-else-if="soloCreacion"
+          class="text-body-2 valor-nuevo"
+      >
         {{ mostrarValor(cambio.nuevo, cambio.campo) }}
       </div>
 
-      <!-- Actualización: comparación compacta -->
-      <div v-else class="d-flex align-center flex-wrap ga-2">
+      <!-- Actualización: mostrar anterior → nuevo -->
+      <div
+          v-else
+          class="d-flex align-center flex-wrap ga-2"
+      >
         <span class="text-body-2 text-medium-emphasis valor">
           {{
             cambio.tieneAnterior
@@ -162,6 +274,7 @@ function esEstado(campo: string) {
     No hay diferencias de campos disponibles.
   </div>
 </template>
+
 
 
 <style scoped>
