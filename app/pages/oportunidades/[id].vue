@@ -6,6 +6,7 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
+const perfilCandidato = ref<any>(null)
 const { get, post } = useClienteRequest()
 
 const vacante = ref<any>(null)
@@ -38,6 +39,19 @@ const requisitosObligatorios = computed(() =>
         ),
     ),
 )
+
+async function verificarPerfil() {
+  try {
+    const respuesta = await get('/api/candidatos/mi-perfil')
+
+    perfilCandidato.value = respuesta.data?.data ?? respuesta.data
+
+    return !!perfilCandidato.value?.id
+  }
+  catch {
+    return false
+  }
+}
 
 function formatearFecha(fecha: string | null) {
   if (!fecha) return 'No especificada'
@@ -81,8 +95,15 @@ async function obtenerVacante() {
   }
 }
 
-function abrirPostulacion() {
+async function abrirPostulacion() {
   if (!disponible.value || postulacionExitosa.value) return
+
+  const tienePerfil = await verificarPerfil()
+
+  if (!tienePerfil) {
+    await router.push('/candidatos/mi-perfil')
+    return
+  }
 
   errorPostulacion.value = ''
   dialogoPostular.value = true

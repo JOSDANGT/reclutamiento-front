@@ -193,10 +193,11 @@ const rolesUsuario = computed(() =>
 
         <VListItem
             v-if="puedeVerPerfilCandidato"
+            to="/candidatos/mi-perfil"
             title="Mi perfil"
             prepend-icon="mdi-account-outline"
             rounded="lg"
-            disabled
+            color="primary"
         />
       </template>
 
