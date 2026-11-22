@@ -24,7 +24,6 @@ Sistema web de gestión de reclutamiento y selección de personal, desarrollado 
 
 ```bash
 git clone https://github.com/JOSDANGT/reclutamiento-front.git
-cd TalentoHumanoFront
 ```
 
 ### 2. Instalar dependencias
