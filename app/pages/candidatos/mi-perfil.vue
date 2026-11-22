@@ -268,7 +268,9 @@ onMounted(obtenerPerfil)
           </div>
         </VExpansionPanelTitle>
         <VExpansionPanelText>
+
           <CandidatoDocumentos v-if="existePerfil" class="pt-4"/>
+
           <VAlert v-else type="info" variant="tonal" class="mt-4">Guarda primero tu perfil para habilitar la carga de
             documentos.
           </VAlert>

@@ -127,6 +127,7 @@ onMounted(cargar)
               />
 
               <CandidatoDocumentosConsulta
+                  :postulacion-id="Number(postulacion.id)"
                   :documentos="candidato?.documentos ?? []"
               />
 

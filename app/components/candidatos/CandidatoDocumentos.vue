@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const {get, post, del} = useClienteRequest()
+const {get, post, deleted} = useClienteRequest()
+import VerDocumento from './VerDocumento.vue'
 
 const documentos = ref<any[]>([])
 const archivo = ref<File | File[] | null>(null)
@@ -100,7 +101,7 @@ async function eliminarDocumento(documento: any) {
   mensaje.value = ''
 
   try {
-    await del(
+    await deleted(
         `/api/candidatos/mi-perfil/documentos/${documento.id}`,
     )
 
@@ -262,11 +263,19 @@ onMounted(obtenerDocumentos)
                 Principal
               </VChip>
 
+              <VerDocumento
+                  :ruta="`/api/candidatos/mi-perfil/documentos/${documento.id}`"
+                  :nombre="documento.nombre_original"
+                  :mime-type="documento.mime_type"
+              />
+
               <VBtn
                   icon="mdi-delete-outline"
                   color="error"
                   variant="text"
                   size="small"
+                  title="Eliminar documento"
+                  aria-label="Eliminar documento"
                   :loading="eliminandoId === documento.id"
                   @click="eliminarDocumento(documento)"
               />

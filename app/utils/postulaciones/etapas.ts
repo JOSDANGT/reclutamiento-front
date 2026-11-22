@@ -23,9 +23,16 @@ export const ETAPAS_POSTULACION = [
         descripcion: 'Tu postulación fue seleccionada.',
         icono: 'mdi-trophy-outline',
     },
+    {
+        codigo: 'CONTRATADA',
+        nombre: 'Contratada',
+        descripcion: 'Tu contratación fue confirmada.',
+        icono: 'mdi-account-check-outline',
+    },
 ]
 
 export const ESTADOS_FINALES_POSTULACION = [
     'RECHAZADA',
     'RETIRADA',
+    'OFERTA RECHAZADA',
 ]
