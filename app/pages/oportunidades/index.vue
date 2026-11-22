@@ -37,6 +37,7 @@ async function obtenerOportunidades() {
     )
 
     const contenido = respuesta.data ?? respuesta
+    console.log('contenido', contenido)
 
     const paginacion = Array.isArray(contenido?.data)
         ? contenido
@@ -162,19 +163,35 @@ onMounted(obtenerOportunidades)
             class="d-flex flex-column"
         >
           <VCardText class="flex-grow-1 pa-5">
-            <div class="d-flex justify-space-between align-center mb-3">
-              <VChip
-                  color="success"
-                  variant="tonal"
-                  size="small"
-              >
-                Disponible
-              </VChip>
+            <div class="d-flex justify-space-between align-center ga-3 mb-3">
 
-              <span class="text-caption text-medium-emphasis">
+              <!-- Estados de la vacante -->
+              <div class="d-flex align-center flex-wrap ga-2">
+                <VChip
+                    color="success"
+                    variant="tonal"
+                    size="small"
+                >
+                  Disponible
+                </VChip>
+
+                <VChip
+                    v-if="vacante.postulado"
+                    color="primary"
+                    variant="tonal"
+                    size="small"
+                    prepend-icon="mdi-check-circle-outline"
+                >
+                  Postulado
+                </VChip>
+              </div>
+
+              <!-- Cantidad de plazas -->
+              <span class="text-caption text-medium-emphasis text-no-wrap">
                 {{ vacante.cantidad_plazas }}
                 {{ Number(vacante.cantidad_plazas) === 1 ? 'plaza' : 'plazas' }}
               </span>
+
             </div>
 
             <div class="text-h6 font-weight-bold mb-2">

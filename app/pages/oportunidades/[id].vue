@@ -1,8 +1,11 @@
-
 <script setup lang="ts">
 definePageMeta({
   middleware: 'auth',
 })
+
+import PostulacionTracking from '../../components/postulaciones/PostulacionTracking.vue'
+
+import {ETAPAS_POSTULACION, ESTADOS_FINALES_POSTULACION,} from '../../utils/postulaciones/etapas'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,6 +20,9 @@ const postulando = ref(false)
 const error = ref('')
 const errorPostulacion = ref('')
 const postulacionExitosa = ref(false)
+
+const verificandoPostulacion = ref(false)
+const postulacionActual = ref<any>(null)
 
 const dialogoPostular = ref(false)
 const cartaPresentacion = ref('')
@@ -39,6 +45,31 @@ const requisitosObligatorios = computed(() =>
         ),
     ),
 )
+
+
+async function verificarPostulacion() {
+  verificandoPostulacion.value = true
+
+  try {
+    const respuesta = await get(
+        `/api/postulaciones/verificar/${route.params.id}`,
+    )
+
+    const contenido = respuesta.data ?? respuesta
+    const datos = contenido.data ?? contenido
+
+    postulacionExitosa.value = datos.postulado === true
+    postulacionActual.value = datos.postulacion ?? null
+  }
+  catch (exception: any) {
+    console.error('Error al verificar postulación:', exception)
+    error.value = 'No fue posible verificar si ya te postulaste.'
+  }
+  finally {
+    verificandoPostulacion.value = false
+  }
+}
+
 
 async function verificarPerfil() {
   try {
@@ -85,6 +116,8 @@ async function obtenerVacante() {
     )
 
     vacante.value = respuesta.data?.data ?? respuesta.data
+
+    await verificarPostulacion()
   }
   catch (exception: any) {
     error.value = exception.response?.data?.message
@@ -393,12 +426,23 @@ onMounted(obtenerVacante)
                   color="primary"
                   block
                   size="large"
-                  prepend-icon="mdi-send-outline"
-                  :disabled="!disponible || postulacionExitosa"
+                  :prepend-icon="postulacionExitosa
+                    ? 'mdi-check-circle-outline'
+                    : 'mdi-send-outline'"
+                  :disabled="!disponible || postulacionExitosa || verificandoPostulacion"
+                  :loading="verificandoPostulacion"
                   @click="abrirPostulacion"
               >
-                {{ postulacionExitosa ? 'Postulación enviada' : 'Postularme' }}
+                {{ postulacionExitosa ? 'Ya te postulaste' : 'Postularme' }}
               </VBtn>
+              <PostulacionTracking
+                  v-if="postulacionExitosa && postulacionActual?.estado"
+                  class="mt-4"
+                  :estado="postulacionActual.estado"
+                  :fecha-postulacion="postulacionActual.fecha_postulacion"
+                  :etapas="ETAPAS_POSTULACION"
+                  :estados-finales="ESTADOS_FINALES_POSTULACION"
+              />
             </VCardText>
           </VCard>
         </VCol>
