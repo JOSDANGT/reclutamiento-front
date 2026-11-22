@@ -15,6 +15,11 @@ definePageMeta({middleware: 'auth'})
 const route = useRoute()
 const {get} = useClienteRequest()
 const postulacion = ref<any>(null)
+const estadoActual = computed(() =>
+    String(postulacion.value?.estado?.nombre ?? '')
+        .trim()
+        .toUpperCase(),
+)
 const estados = ref<any[]>([])
 const evaluacionAprobada = ref(false)
 const cargando = ref(false)
@@ -54,9 +59,23 @@ async function cargar() {
   }
 }
 
+const esRecibida = computed(() =>
+    postulacion.value?.estado?.nombre?.trim().toUpperCase() === 'RECIBIDA',
+)
+
 async function estadoActualizado() {
+  const estadoAnterior = estadoActual.value
+
   await cargar()
-  if (!error.value) mensaje.value = 'Estado actualizado correctamente.'
+
+  if (error.value) return
+
+  if (estadoAnterior !== 'ENTREVISTA' && estadoActual.value === 'ENTREVISTA') {
+    await navigateTo('/postulaciones', { replace: true })
+    return
+  }
+
+  mensaje.value = 'Estado actualizado correctamente.'
 }
 
 onMounted(cargar)
@@ -79,33 +98,55 @@ onMounted(cargar)
       <VRow>
         <VCol cols="12" md="8">
           <div class="d-flex flex-column ga-4">
+            <!-- Al recibir la postulación, la primera acción es iniciar revisión. -->
             <CandidatoInformacion
                 :candidato="candidato"
             />
-            <CandidatoHabilidadesConsulta
-                :habilidades="candidato?.habilidades ?? []"
-            />
-            <CandidatoExperienciasConsulta
-                :experiencias="candidato?.experiencias_laborales ?? []"
-            />
-            <CandidatoFormacionesConsulta
-                :formaciones="candidato?.formaciones_academicas ?? []"
-            />
-            <CandidatoDocumentosConsulta
-                :documentos="candidato?.documentos ?? []"
-            />
-            <PostulacionEvaluacion
-                :postulacion-id="Number(postulacion.id)"
-                @evaluada="evaluacionActualizada"
-            />
-
             <PostulacionDecision
+                v-if="esRecibida"
                 :postulacion="postulacion"
                 :estados="estados"
                 :evaluacion-guardada="evaluacionGuardada"
                 :evaluacion-aprobada="evaluacionAprobada"
                 @actualizado="estadoActualizado"
             />
+
+
+            <template v-if="!esRecibida">
+
+              <CandidatoHabilidadesConsulta
+                  :habilidades="candidato?.habilidades ?? []"
+              />
+
+              <CandidatoExperienciasConsulta
+                  :experiencias="candidato?.experiencias_laborales ?? []"
+              />
+
+              <CandidatoFormacionesConsulta
+                  :formaciones="candidato?.formaciones_academicas ?? []"
+              />
+
+              <CandidatoDocumentosConsulta
+                  :documentos="candidato?.documentos ?? []"
+              />
+
+
+              <PostulacionEvaluacion
+                  :postulacion-id="Number(postulacion.id)"
+                  :editable="enRevision"
+                  @evaluada="evaluacionActualizada"
+              />
+
+              <PostulacionDecision
+                  v-if="estadoActual.normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'EN REVISION'"
+                  :postulacion="postulacion"
+                  :estados="estados"
+                  :evaluacion-guardada="evaluacionGuardada"
+                  :evaluacion-aprobada="evaluacionAprobada"
+                  @actualizado="estadoActualizado"
+              />
+            </template>
+
             <DecisionOferta
                 v-if="postulacion.estado?.nombre?.trim().toUpperCase() === 'SELECCIONADA'"
                 :postulacion-id="Number(postulacion.id)"

@@ -1,5 +1,8 @@
 <script setup lang="ts">
-const props = defineProps<{ postulacionId: number }>()
+const props = defineProps<{
+  postulacionId: number
+  editable: boolean
+}>()
 const emit = defineEmits<{
   evaluada: [guardada: boolean, aprobada: boolean]
 }>()
@@ -59,12 +62,21 @@ async function cargar() {
 }
 
 function marcarCambios() {
+  if (!props.editable || cargando.value || guardando.value) return
+
   cambiosSinGuardar.value = true
-  emit('evaluada', false)
+  mensaje.value = ''
+  emit('evaluada', false, false)
 }
 
 async function guardar() {
-  if (guardando.value || !total.value) return
+  if (
+      !props.editable
+      || cargando.value
+      || guardando.value
+      || !total.value
+      || !cambiosSinGuardar.value
+  ) return
 
   guardando.value = true
   error.value = ''
@@ -82,16 +94,14 @@ async function guardar() {
     await cargar()
 
     mensaje.value = 'Evaluación guardada correctamente.'
-  }
-  catch (e: any) {
+  } catch (e: any) {
     const errores = e.response?.data?.errors
 
     error.value = errores
         ? Object.values(errores).flat().join(' ')
         : e.response?.data?.message
         ?? 'No se pudo guardar la evaluación.'
-  }
-  finally {
+  } finally {
     guardando.value = false
   }
 }
@@ -120,17 +130,46 @@ onMounted(cargar)
           <VChip v-if="item.obligatorio" color="warning" size="x-small" variant="tonal">Obligatorio</VChip>
         </div>
         <p v-if="item.descripcion" class="text-body-2 text-medium-emphasis mb-3">{{ item.descripcion }}</p>
-        <VRow>
+        <VRow v-if="editable">
           <VCol cols="12" md="4">
-            <VSelect v-model="item.cumple" :items="[
-              { title: 'Pendiente', value: null },
-              { title: 'Cumple', value: true },
-              { title: 'No cumple', value: false },
-            ]" label="Cumplimiento" variant="outlined" density="comfortable" @update:model-value="marcarCambios"/>
+            <VSelect
+                v-model="item.cumple"
+                :items="[
+        { title: 'Pendiente', value: null },
+        { title: 'Cumple', value: true },
+        { title: 'No cumple', value: false },
+      ]"
+                label="Cumplimiento"
+                variant="outlined"
+                density="comfortable"
+                :disabled="cargando || guardando"
+                @update:model-value="marcarCambios"
+            />
           </VCol>
+
           <VCol cols="12" md="8">
-            <VTextField v-model="item.observacion" label="Observaciones" variant="outlined" density="comfortable"
-                        @update:model-value="marcarCambios"/>
+            <VTextField
+                v-model="item.observacion"
+                label="Observaciones"
+                variant="outlined"
+                density="comfortable"
+                :disabled="cargando || guardando"
+                @update:model-value="marcarCambios"
+            />
+          </VCol>
+        </VRow>
+
+        <VRow v-else dense>
+          <VCol cols="12" md="4">
+            <div class="text-caption text-medium-emphasis">Cumplimiento</div>
+            <span>
+              {{ item.cumple === null ? 'Pendiente' : item.cumple ? 'Cumple' : 'No cumple' }}
+            </span>
+          </VCol>
+
+          <VCol cols="12" md="8">
+            <div class="text-caption text-medium-emphasis">Observaciones</div>
+            <span>{{ item.observacion || 'Sin observaciones' }}</span>
           </VCol>
         </VRow>
         <VDivider v-if="index < evaluaciones.length - 1" class="mt-2"/>

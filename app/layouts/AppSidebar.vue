@@ -146,13 +146,7 @@ const rolesUsuario = computed(() =>
             color="primary"
         />
 
-        <VListItem
-            v-if="puedeVerCandidatos"
-            title="Candidatos"
-            prepend-icon="mdi-account-multiple-outline"
-            rounded="lg"
-            disabled
-        />
+
       </template>
 
       <!-- Portal del candidato -->
