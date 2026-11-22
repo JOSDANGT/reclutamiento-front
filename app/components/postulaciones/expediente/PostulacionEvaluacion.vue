@@ -135,10 +135,10 @@ onMounted(cargar)
             <VSelect
                 v-model="item.cumple"
                 :items="[
-        { title: 'Pendiente', value: null },
-        { title: 'Cumple', value: true },
-        { title: 'No cumple', value: false },
-      ]"
+                  { title: 'Pendiente', value: null },
+                  { title: 'Cumple', value: true },
+                  { title: 'No cumple', value: false },
+                ]"
                 label="Cumplimiento"
                 variant="outlined"
                 density="comfortable"

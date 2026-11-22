@@ -199,7 +199,7 @@ watch(
               :loading="guardando"
               @click="guardarEvaluacion"
           >
-            Guardar evaluación
+            Guardar evalua
           </VBtn>
         </div>
       </template>

@@ -89,12 +89,10 @@ function colorEstado(estado: string) {
 function puedeRetirar(postulacion: any) {
   const estado = normalizarEstado(estadoNombre(postulacion))
 
-  return ![
-    'RETIRADA',
-    'OFERTA RECHAZADA',
-    'RECHAZADA',
-    'SELECCIONADA',
-    'SIN ESTADO',
+  return [
+    'RECIBIDA',
+    'EN REVISION',
+    'ENTREVISTA',
   ].includes(estado)
 }
 

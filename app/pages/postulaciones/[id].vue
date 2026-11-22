@@ -17,8 +17,14 @@ const {get} = useClienteRequest()
 const postulacion = ref<any>(null)
 const estadoActual = computed(() =>
     String(postulacion.value?.estado?.nombre ?? '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[_-]/g, ' ')
         .trim()
         .toUpperCase(),
+)
+const enRevision = computed(() =>
+    estadoActual.value === 'EN REVISION',
 )
 const estados = ref<any[]>([])
 const evaluacionAprobada = ref(false)
