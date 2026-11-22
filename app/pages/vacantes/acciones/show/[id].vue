@@ -1,6 +1,6 @@
 
 <script setup lang="ts">
-import VacanteBitacora from '../../../../components/vacante/VacanteBitacora.vue'
+import BitacoraHistorial from '../../../../components/bitacoras/BitacoraHistorial.vue'
 
 definePageMeta({
   middleware: 'auth',
@@ -20,6 +20,20 @@ const coloresEstado: Record<string, string> = {
   PUBLICADA: 'success',
   CERRADA: 'warning',
 }
+
+const referenciasBitacora = computed(() => {
+  const referencias: Record<string, Record<string, string>> = {
+    unidad_id: {},
+  }
+
+  const unidad = vacante.value?.unidad
+
+  if (unidad) {
+    referencias.unidad_id[String(unidad.id)] = unidad.nombre
+  }
+
+  return referencias
+})
 
 function formatoMoneda(valor: any) {
   if (valor === null || valor === undefined || valor === '') {
@@ -295,8 +309,10 @@ onMounted(obtenerVacante)
 
       </VCard>
 
-      <VacanteBitacora
-          :bitacoras="vacante.bitacoras || []"
+      <BitacoraHistorial
+          :registros="vacante.bitacoras || []"
+          tipo="vacante"
+          :referencias="referenciasBitacora"
       />
     </template>
   </VContainer>
