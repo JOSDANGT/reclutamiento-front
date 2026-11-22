@@ -91,6 +91,7 @@ function puedeRetirar(postulacion: any) {
 
   return ![
     'RETIRADA',
+    'OFERTA RECHAZADA',
     'RECHAZADA',
     'SELECCIONADA',
     'SIN ESTADO',

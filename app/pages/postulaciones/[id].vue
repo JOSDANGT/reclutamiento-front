@@ -7,6 +7,7 @@ import CandidatoFormacionesConsulta from '../../components/postulaciones/expedie
 import CandidatoDocumentosConsulta from '../../components/postulaciones/expediente/CandidatoDocumentosConsulta.vue'
 import PostulacionEvaluacion from '../../components/postulaciones/expediente/PostulacionEvaluacion.vue'
 import PostulacionDecision from '../../components/postulaciones/expediente/PostulacionDecision.vue'
+import DecisionOferta from '../../components/postulaciones/gestion/DecisionOferta.vue'
 import {ETAPAS_POSTULACION, ESTADOS_FINALES_POSTULACION} from '../../utils/postulaciones/etapas'
 
 definePageMeta({middleware: 'auth'})
@@ -104,6 +105,11 @@ onMounted(cargar)
                 :evaluacion-guardada="evaluacionGuardada"
                 :evaluacion-aprobada="evaluacionAprobada"
                 @actualizado="estadoActualizado"
+            />
+            <DecisionOferta
+                v-if="postulacion.estado?.nombre?.trim().toUpperCase() === 'SELECCIONADA'"
+                :postulacion-id="Number(postulacion.id)"
+                @actualizada="estadoActualizado"
             />
           </div>
         </VCol>

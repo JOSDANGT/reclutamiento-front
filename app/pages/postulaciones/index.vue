@@ -160,6 +160,30 @@ function buscar() {
   }
 }
 
+function normalizarEstado(estado: string | null | undefined) {
+  return String(estado ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[_-]/g, ' ')
+      .trim()
+      .toUpperCase()
+}
+
+function obtenerAccionPostulacion(postulacion: any) {
+  const estado = normalizarEstado(postulacion.estado?.nombre)
+
+  if (estado === 'ENTREVISTA') {
+    return {
+      titulo: 'Gestionar agenda',
+      icono: 'mdi-calendar-month',
+      ruta: `/postulaciones/agenda/${postulacion.id}`,
+      color: 'primary',
+    }
+  }
+
+  return null
+}
+
 watch(pagina, cargarPostulaciones)
 watch(estadoFiltro, buscar)
 
@@ -285,13 +309,39 @@ onMounted(async () => {
             </VChip>
           </td>
           <td class="text-end">
-            <VBtn
-                :to="`/postulaciones/${postulacion.id}`"
-                icon="mdi-eye-outline"
-                variant="text"
-                color="primary"
-                size="small"
-            />
+            <div class="d-flex align-center justify-end ga-2">
+              <!-- Expediente disponible en cualquier estado -->
+              <VTooltip text="Ver expediente" location="top">
+                <template #activator="{ props: tooltipProps }">
+                  <VBtn
+                      v-bind="tooltipProps"
+                      :to="`/postulaciones/${postulacion.id}`"
+                      icon="mdi-eye-outline"
+                      variant="text"
+                      color="primary"
+                      size="small"
+                  />
+                </template>
+              </VTooltip>
+
+              <!-- Gestión específica de la etapa -->
+              <VTooltip
+                  v-if="obtenerAccionPostulacion(postulacion)"
+                  :text="obtenerAccionPostulacion(postulacion)?.titulo"
+                  location="top"
+              >
+                <template #activator="{ props: tooltipProps }">
+                  <VBtn
+                      v-bind="tooltipProps"
+                      :to="obtenerAccionPostulacion(postulacion)?.ruta"
+                      :icon="obtenerAccionPostulacion(postulacion)?.icono"
+                      :color="obtenerAccionPostulacion(postulacion)?.color"
+                      variant="tonal"
+                      size="small"
+                  />
+                </template>
+              </VTooltip>
+            </div>
           </td>
         </tr>
 
@@ -322,74 +372,5 @@ onMounted(async () => {
         />
       </VCardActions>
     </VCard>
-
-    <VDialog v-model="dialogo" max-width="650" persistent>
-      <VCard rounded="lg">
-        <VCardTitle class="pa-5">
-          Gestionar postulación #{{ detalle?.id }}
-        </VCardTitle>
-
-        <VDivider />
-
-        <VCardText class="pa-5">
-          <div class="mb-4">
-            <strong>Vacante:</strong>
-            {{ detalle?.vacante?.titulo }}
-          </div>
-
-          <div class="mb-4">
-            <strong>Candidato:</strong>
-            #{{ detalle?.candidato_id }}
-          </div>
-
-          <div class="mb-4">
-            <strong>Estado actual:</strong>
-            {{ detalle?.estado?.nombre }}
-          </div>
-
-          <VSelect
-              v-model="estadoId"
-              :items="estados.filter(e => e.nombre?.toUpperCase() !== 'RETIRADA')"
-              item-title="nombre"
-              item-value="id"
-              label="Nuevo estado"
-              variant="outlined"
-              density="comfortable"
-              class="mb-3"
-          />
-
-          <VTextarea
-              v-model="observaciones"
-              label="Observaciones"
-              variant="outlined"
-              rows="3"
-              auto-grow
-          />
-        </VCardText>
-
-        <VDivider />
-
-        <VCardActions class="pa-4">
-          <VSpacer />
-
-          <VBtn
-              variant="text"
-              :disabled="guardando"
-              @click="dialogo = false"
-          >
-            Cancelar
-          </VBtn>
-
-          <VBtn
-              color="primary"
-              :loading="guardando"
-              :disabled="!estadoId || estadoId === detalle?.estado_id"
-              @click="actualizarEstado"
-          >
-            Guardar estado
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
   </VContainer>
 </template>
