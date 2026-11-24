@@ -9,7 +9,10 @@ const ubicacion = computed(() => [props.candidato?.municipio, props.candidato?.d
     <VDivider/>
     <VCardText>
       <VRow>
-        <VCol cols="12" md="6"><strong>Candidato:</strong> #{{ candidato?.id ?? '-' }}</VCol>
+        <VCol cols="12" md="6">
+          <strong>Candidato:</strong>
+          {{ candidato?.usuario?.nombre_completo || 'Sin nombre registrado' }}
+        </VCol>
         <VCol cols="12" md="6"><strong>Teléfono:</strong> {{ candidato?.telefono_contacto || '-' }}</VCol>
         <VCol cols="12" md="6"><strong>Título:</strong> {{ candidato?.titulo_profesional || '-' }}</VCol>
         <VCol cols="12" md="6"><strong>Nivel académico:</strong> {{ candidato?.nivel_academico || '-' }}</VCol>

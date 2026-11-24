@@ -52,38 +52,6 @@ const nombreUsuario = computed(() => {
         </VCard>
       </VCol>
 
-      <VCol cols="12" md="6">
-        <VCard rounded="lg" elevation="1">
-          <VCardTitle class="d-flex align-center ga-2">
-            <VIcon icon="mdi-shield-check-outline" color="primary" />
-            Permisos asignados
-          </VCardTitle>
-
-          <VCardText>
-            <div v-if="auth.permisos.length">
-              <VChip
-                  v-for="permiso in auth.permisos"
-                  :key="permiso"
-                  color="primary"
-                  variant="tonal"
-                  size="small"
-                  class="ma-1"
-              >
-                {{ permiso }}
-              </VChip>
-            </div>
-
-            <VAlert
-                v-else
-                type="info"
-                variant="tonal"
-                density="compact"
-            >
-              No tienes permisos asignados.
-            </VAlert>
-          </VCardText>
-        </VCard>
-      </VCol>
     </VRow>
   </VContainer>
 </template>
