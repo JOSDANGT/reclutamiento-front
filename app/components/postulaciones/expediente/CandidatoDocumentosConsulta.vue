@@ -44,7 +44,7 @@ defineProps<{
             </VChip>
 
             <VerDocumento
-                :ruta="`/api/postulaciones/${postulacionId}/documentos/${documento.id}`"
+                :ruta="`/api/postulaciones/documentos/${postulacionId}/${documento.id}`"
                 :nombre="documento.nombre_original"
                 :mime-type="documento.mime_type"
             />

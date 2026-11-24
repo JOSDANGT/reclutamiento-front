@@ -38,7 +38,7 @@ async function guardar() {
   error.value = ''
 
   try {
-    await put(`/api/postulaciones/${props.postulacionId}/oferta`, {
+    await put(`/api/postulaciones/oferta/${props.postulacionId}`, {
       decision: decision.value,
       fecha_ingreso: decision.value === 'ACEPTADA' ? fechaIngreso.value : null,
       observaciones: observaciones.value.trim() || null,

@@ -8,24 +8,13 @@ import CandidatoDocumentosConsulta from '../../components/postulaciones/expedien
 import PostulacionEvaluacion from '../../components/postulaciones/expediente/PostulacionEvaluacion.vue'
 import PostulacionDecision from '../../components/postulaciones/expediente/PostulacionDecision.vue'
 import DecisionOferta from '../../components/postulaciones/gestion/DecisionOferta.vue'
-import {ETAPAS_POSTULACION, ESTADOS_FINALES_POSTULACION} from '../../utils/postulaciones/etapas'
+import {ETAPAS_POSTULACION, ESTADOS_FINALES_POSTULACION, ESTADO_POSTULACION_ID} from '../../utils/postulaciones/etapas'
 
 definePageMeta({middleware: 'auth'})
 
 const route = useRoute()
 const {get} = useClienteRequest()
 const postulacion = ref<any>(null)
-const estadoActual = computed(() =>
-    String(postulacion.value?.estado?.nombre ?? '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[_-]/g, ' ')
-        .trim()
-        .toUpperCase(),
-)
-const enRevision = computed(() =>
-    estadoActual.value === 'EN REVISION',
-)
 const estados = ref<any[]>([])
 const evaluacionAprobada = ref(false)
 const cargando = ref(false)
@@ -65,18 +54,34 @@ async function cargar() {
   }
 }
 
-const esRecibida = computed(() =>
-    postulacion.value?.estado?.nombre?.trim().toUpperCase() === 'RECIBIDA',
+const estadoActualId = computed(() => {
+  const id = postulacion.value?.estado_id
+  return id == null ? null : Number(id)
+})
+
+const esRecibida = computed(
+    () => estadoActualId.value === ESTADO_POSTULACION_ID.RECIBIDA,
+)
+
+const enRevision = computed(
+    () => estadoActualId.value === ESTADO_POSTULACION_ID.EN_REVISION,
+)
+
+const esSeleccionada = computed(
+    () => estadoActualId.value === ESTADO_POSTULACION_ID.SELECCIONADA,
 )
 
 async function estadoActualizado() {
-  const estadoAnterior = estadoActual.value
+  const estadoAnteriorId = estadoActualId.value
 
   await cargar()
 
   if (error.value) return
 
-  if (estadoAnterior !== 'ENTREVISTA' && estadoActual.value === 'ENTREVISTA') {
+  if (
+      estadoAnteriorId !== ESTADO_POSTULACION_ID.ENTREVISTA &&
+      estadoActualId.value === ESTADO_POSTULACION_ID.ENTREVISTA
+  ) {
     await navigateTo('/postulaciones', { replace: true })
     return
   }
@@ -104,7 +109,6 @@ onMounted(cargar)
       <VRow>
         <VCol cols="12" md="8">
           <div class="d-flex flex-column ga-4">
-            <!-- Al recibir la postulación, la primera acción es iniciar revisión. -->
             <CandidatoInformacion
                 :candidato="candidato"
             />
@@ -145,7 +149,7 @@ onMounted(cargar)
               />
 
               <PostulacionDecision
-                  v-if="estadoActual.normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'EN REVISION'"
+                  v-if="enRevision"
                   :postulacion="postulacion"
                   :estados="estados"
                   :evaluacion-guardada="evaluacionGuardada"

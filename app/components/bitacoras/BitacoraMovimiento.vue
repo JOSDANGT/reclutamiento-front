@@ -53,7 +53,7 @@ const expandido = ref(false)
               size="x-small"
               variant="tonal"
           >
-            {{ registro.accion }}
+            {{ configuracionAccion(registro.accion).titulo }}
           </VChip>
         </div>
 

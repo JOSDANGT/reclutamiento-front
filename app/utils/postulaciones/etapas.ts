@@ -31,6 +31,17 @@ export const ETAPAS_POSTULACION = [
     },
 ]
 
+export const ESTADO_POSTULACION_ID = {
+    RECIBIDA: 1,
+    EN_REVISION: 2,
+    ENTREVISTA: 3,
+    SELECCIONADA: 4,
+    RECHAZADA: 5,
+    RETIRADA: 6,
+    CONTRATADA: 7,
+    OFERTA_RECHAZADA: 8,
+} as const
+
 export const ESTADOS_FINALES_POSTULACION = [
     'RECHAZADA',
     'RETIRADA',

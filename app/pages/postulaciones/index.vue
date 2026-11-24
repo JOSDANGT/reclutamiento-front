@@ -298,7 +298,7 @@ onMounted(async () => {
             {{ postulacion.vacante?.titulo ?? '-' }}
           </td>
           <td>
-            Candidato #{{ postulacion.candidato_id }}
+            {{ postulacion.candidato?.usuario?.nombre_completo }}
           </td>
           <td>
             {{ formatearFecha(postulacion.fecha_postulacion) }}

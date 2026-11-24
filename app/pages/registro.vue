@@ -9,7 +9,7 @@ useHead({
   title: 'Registro de candidato | TalentHub',
 })
 
-const { post } = useApi()
+const { post } = useClienteRequest()
 
 const formulario = ref<InstanceType<typeof VForm> | null>(null)
 
